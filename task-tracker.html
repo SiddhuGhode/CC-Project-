@@ -1,0 +1,225 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Crazy Beautiful Task Tracker</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f5f7fa;
+      color: #333;
+      transition: background-color 0.3s, color 0.3s;
+    }
+    body.dark {
+      background-color: #1e1e2f;
+      color: #eee;
+    }
+    .tracker {
+      max-width: 600px;
+      margin: 40px auto;
+      padding: 2rem;
+      border-radius: 1rem;
+      background-color: white;
+      box-shadow: 0 0 20px rgba(0,0,0,0.1);
+      transition: background-color 0.3s;
+    }
+    body.dark .tracker {
+      background-color: #2c2c3a;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+      font-size: 2.5rem;
+    }
+    form {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    input[type="text"] {
+      flex: 1;
+      padding: 10px;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      font-size: 1rem;
+    }
+    button {
+      background-color: #4f46e5;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background-color 0.2s;
+    }
+    button:hover {
+      background-color: #4338ca;
+    }
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+    li {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #f1f5f9;
+      margin-bottom: 10px;
+      padding: 12px 16px;
+      border-radius: 10px;
+      animation: fadeIn 0.3s ease-in;
+    }
+    body.dark li {
+      background: #3a3a4f;
+    }
+    li.completed span {
+      text-decoration: line-through;
+      color: #999;
+    }
+    .task-content {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .task-actions button {
+      background: none;
+      color: #4f46e5;
+      padding: 4px 8px;
+      font-size: 0.9rem;
+      border: none;
+      cursor: pointer;
+    }
+    .task-actions button:hover {
+      text-decoration: underline;
+    }
+    .task-stats {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      font-size: 0.95rem;
+    }
+    .actions {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 20px;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+  <div class="tracker">
+    <h1>Task Tracker 📝</h1>
+    <form id="taskForm">
+      <input type="text" id="taskInput" placeholder="Add a new task..." required />
+      <button type="submit">Add</button>
+    </form>
+    <div class="task-stats">
+      <span id="totalTasks">Total: 0</span>
+      <span id="completedTasks">Completed: 0</span>
+      <span id="pendingTasks">Pending: 0</span>
+    </div>
+    <ul id="taskList"></ul>
+    <div class="actions">
+      <button id="clearCompleted">Clear Completed</button>
+      <button id="toggleTheme">Toggle Theme</button>
+    </div>
+  </div>
+  <script>
+    const taskForm = document.getElementById('taskForm');
+    const taskInput = document.getElementById('taskInput');
+    const taskList = document.getElementById('taskList');
+    const totalTasks = document.getElementById('totalTasks');
+    const completedTasks = document.getElementById('completedTasks');
+    const pendingTasks = document.getElementById('pendingTasks');
+    const clearCompleted = document.getElementById('clearCompleted');
+    const toggleTheme = document.getElementById('toggleTheme');
+
+    let tasks = [];
+
+    taskForm.addEventListener('submit', e => {
+      e.preventDefault();
+      const text = taskInput.value.trim();
+      if (text) {
+        tasks.push({ text, completed: false });
+        taskInput.value = '';
+        renderTasks();
+      }
+    });
+
+    clearCompleted.addEventListener('click', () => {
+      tasks = tasks.filter(t => !t.completed);
+      renderTasks();
+    });
+
+    toggleTheme.addEventListener('click', () => {
+      document.body.classList.toggle('dark');
+    });
+
+    function renderTasks() {
+      taskList.innerHTML = '';
+      tasks.forEach((task, i) => {
+        const li = document.createElement('li');
+        if (task.completed) li.classList.add('completed');
+
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.checked = task.completed;
+        checkbox.onchange = () => {
+          task.completed = !task.completed;
+          renderTasks();
+        };
+
+        const span = document.createElement('span');
+        span.textContent = task.text;
+
+        const taskContent = document.createElement('div');
+        taskContent.className = 'task-content';
+        taskContent.appendChild(checkbox);
+        taskContent.appendChild(span);
+
+        const editBtn = document.createElement('button');
+        editBtn.textContent = 'Edit';
+        editBtn.onclick = () => {
+          const newTask = prompt('Edit your task:', task.text);
+          if (newTask && newTask.trim() !== '') {
+            task.text = newTask.trim();
+            renderTasks();
+          }
+        };
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.textContent = 'Delete';
+        deleteBtn.onclick = () => {
+          tasks.splice(i, 1);
+          renderTasks();
+        };
+
+        const actions = document.createElement('div');
+        actions.className = 'task-actions';
+        actions.appendChild(editBtn);
+        actions.appendChild(deleteBtn);
+
+        li.appendChild(taskContent);
+        li.appendChild(actions);
+        taskList.appendChild(li);
+      });
+      updateStats();
+    }
+
+    function updateStats() {
+      const total = tasks.length;
+      const completed = tasks.filter(t => t.completed).length;
+      totalTasks.textContent = `Total: ${total}`;
+      completedTasks.textContent = `Completed: ${completed}`;
+      pendingTasks.textContent = `Pending: ${total - completed}`;
+    }
+  </script>
+</body>
+</html>
